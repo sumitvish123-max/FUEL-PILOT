@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="FuelPilot - Petrol, Diesel and CNG station operating system" />
+  <title>FuelPilot | Station Operations Portal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2222%22 fill=%22%230f766e%22/><text x=%2250%22 y=%2268%22 font-size=%2255%22 text-anchor=%22middle%22 fill=%22white%22 font-family=%22Arial%22 font-weight=%22bold%22>FP</text></svg>" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar" id="sidebar">
+      <div class="brand"><div class="brand-mark">FP</div><div><strong>FuelPilot</strong><span>Station OS</span></div></div>
+      <div class="station-mini">
+        <span class="status-dot" id="apiDot"></span>
+        <div><strong>ShrePa Fuel &amp; CBG</strong><small id="apiState">Connecting…</small></div>
+      </div>
+      <nav class="nav" aria-label="Main navigation" id="nav"></nav>
+      <div class="sidebar-bottom">
+        <button class="nav-item" id="roleSwitch"><span>⏻</span> Log out</button>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <button class="icon-button mobile-menu" id="mobileMenu" aria-label="Open menu">☰</button>
+        <div><div class="eyebrow" id="pageEyebrow">OWNER CONTROL CENTRE</div><h1 id="pageTitle">Station Overview</h1></div>
+        <div class="top-actions">
+          <button class="btn primary" id="scanBtn">📷 Face attendance</button>
+          <button class="icon-button" id="themeToggle" aria-label="Toggle dark mode">🌓</button>
+          <div class="live-pill" id="livePill"><span class="pulse"></span> LIVE</div>
+          <button class="icon-button" id="notifications" aria-label="Alerts">🔔<b id="alertCount">0</b></button>
+          <div class="owner-chip"><div class="avatar">SB</div><div><strong id="userName">Station Owner</strong><small id="userRole">Owner</small></div></div>
+        </div>
+      </header>
+      <section class="content" id="content"></section>
+    </main>
+  </div>
+
+  <!-- Login (everything except face attendance needs a password) -->
+  <div class="modal-backdrop" id="loginModal" style="z-index:45;background:var(--bg)">
+    <form class="modal" id="loginForm" style="width:min(400px,100%)" autocomplete="on">
+      <div class="brand" style="padding:0 0 14px;color:var(--text)"><div class="brand-mark">FP</div><div><strong style="color:var(--text)">FuelPilot</strong><span>Station OS</span></div></div>
+      <h2>Sign in</h2>
+      <label class="field-label" for="loginRole">Login as</label>
+      <select class="text-input" id="loginRole"><option value="owner">Owner</option><option value="staff">Employee / Shift manager</option></select>
+      <label class="field-label" for="loginPw">Password</label>
+      <input class="text-input" id="loginPw" type="password" autocomplete="current-password" required>
+      <p class="bad hint" id="loginErr" role="alert"></p>
+      <div class="modal-actions" style="flex-direction:column"><button class="btn primary" type="submit" id="loginBtn">Sign in</button>
+        <button class="btn secondary" type="button" id="kioskBtn">📷 Face attendance (no login)</button></div>
+      <p class="hint">Attendance can be marked without a password. All other data needs a login.</p>
+    </form>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <!-- Generic form modal (all data-entry forms render here) -->
+  <div class="modal-backdrop hidden" id="formModal">
+    <div class="modal" id="formBox">
+      <div class="modal-head"><div><span class="eyebrow" id="formEyebrow"></span><h2 id="formTitle"></h2></div><button class="icon-button" id="formX" aria-label="Close">×</button></div>
+      <form id="formEl" novalidate><div id="formBody"></div>
+        <div class="modal-actions"><button type="button" class="btn secondary" id="formCancel">Cancel</button><button type="submit" class="btn primary" id="formSubmit">Save</button></div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Face recognition attendance modal -->
+  <div class="modal-backdrop hidden" id="camModal">
+    <div class="modal">
+      <div class="modal-head"><div><span class="eyebrow">FACE ATTENDANCE</span><h2>Scan to check in / out</h2></div><button class="icon-button" id="camX" aria-label="Close">×</button></div>
+      <div class="cam-stage" id="camStage"><video id="camVideo" autoplay playsinline muted></video><div class="cam-guide"></div></div>
+      <div class="cam-status" id="camStatus">Starting camera…</div>
+      <div class="modal-actions">
+        <select class="text-input" id="camAction" style="width:auto" aria-label="Action"><option value="AUTO">Auto (in/out)</option><option value="IN">Shift In</option><option value="OUT">Shift Out</option></select>
+        <button class="btn primary" id="camScan" disabled>Scan Face</button>
+      </div>
+      <p class="hint">Look straight at the camera. Three quick frames are captured and matched on the server. Every attempt is logged.</p>
+    </div>
+  </div>
+
+  <!-- Shift closing report (WhatsApp) -->
+  <div class="modal-backdrop hidden" id="closeModal">
+    <div class="modal">
+      <div class="modal-head"><div><span class="eyebrow">SHIFT CLOSING</span><h2>Closing report</h2></div><button class="icon-button" id="closeModalX" aria-label="Close">×</button></div>
+      <div class="close-summary" id="closeSummary"></div>
+      <label class="field-label" for="ownerWhatsApp">Owner WhatsApp number</label>
+      <input class="text-input" id="ownerWhatsApp" value="+91 9627397203" placeholder="+91XXXXXXXXXX" />
+      <div class="modal-actions"><button class="btn secondary" id="cancelClose">Close</button><button class="btn primary" id="sendWhatsApp">Send on WhatsApp</button></div>
+      <p class="hint">Opens WhatsApp with the report pre-filled. For automatic delivery, call the Meta WhatsApp Cloud API from the backend – never from browser JavaScript.</p>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
