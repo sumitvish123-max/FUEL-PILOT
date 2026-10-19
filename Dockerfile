@@ -1,19 +1,21 @@
-FROM python:3.10-slim
+FROM python:3.11-slim
 
-# System level C++ & CMake dependencies install karein
+# System level lightweight libraries
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     cmake \
     libopenblas-dev \
     liblapack-dev \
-    libx11-dev \
-    libgtk-3-dev \
+    libgl1 \
+    libglib2.0-0 \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
+# Requirements aur pre-built face recognition install karein
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt && \
+    pip install --no-cache-dir --no-deps face-recognition==1.3.0
 
 COPY . .
 
