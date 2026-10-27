@@ -49,7 +49,41 @@
       <label class="field-label" for="loginRole">Login as</label>
       <select class="text-input" id="loginRole"><option value="owner">Owner</option><option value="staff">Employee / Shift manager</option></select>
       <label class="field-label" for="loginPw">Password</label>
-      <input class="text-input" id="loginPw" type="password" autocomplete="current-password" required>
+      <div style="position:relative; width:100%;">
+  <input
+    class="text-input"
+    id="loginPw"
+    type="password"
+    autocomplete="current-password"
+    required
+    style="width:100%; padding-right:48px; box-sizing:border-box;"
+  >
+
+  <button
+    type="button"
+    id="togglePassword"
+    aria-label="Show password"
+    aria-pressed="false"
+    title="Show password"
+    style="position:absolute; right:12px; top:50%;
+           transform:translateY(-50%); border:none;
+           background:transparent; cursor:pointer;
+           font-size:20px; color:var(--text);"
+  >👁️</button>
+</div>
+
+<script>
+  document.getElementById("togglePassword").addEventListener("click", function () {
+    const password = document.getElementById("loginPw");
+    const visible = password.type === "password";
+
+    password.type = visible ? "text" : "password";
+    this.textContent = visible ? "🙈" : "👁️";
+    this.setAttribute("aria-label", visible ? "Hide password" : "Show password");
+    this.setAttribute("aria-pressed", String(visible));
+    this.title = visible ? "Hide password" : "Show password";
+  });
+</script>
       <p class="bad hint" id="loginErr" role="alert"></p>
       <div class="modal-actions" style="flex-direction:column"><button class="btn primary" type="submit" id="loginBtn">Sign in</button>
         <button class="btn secondary" type="button" id="kioskBtn">📷 Face attendance (no login)</button></div>
